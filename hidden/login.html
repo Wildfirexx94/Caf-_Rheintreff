@@ -105,21 +105,19 @@
 
       const u = document.getElementById("user").value.trim();
       const p = document.getElementById("pass").value;
+      const msg = document.getElementById("msg");
 
       if (u === VALID_USER && p === VALID_PASS) {
-        // Erfolgsziel
-        window.location.href = "https://wildfirexx94.github.io/Caf-_Rheintreff/Forum-eingeloggt.png";
+        sessionStorage.setItem("rheintreff_auth", "1");
+        window.location.href = "index.html";
         return;
       }
 
-      // Fehlerfall → Decoy-Seite
-      document.getElementById("msg").textContent = "Access denied.";
+      msg.textContent = "Access denied.";
       setTimeout(() => {
         window.location.href = "../decoy.html";
       }, 600);
     });
   </script>
 </body>
-
 </html>
-
