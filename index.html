@@ -1,80 +1,397 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Café Rheintreff</title>
-  <meta name="description" content="Gemütliches Café am Rhein – Kuchen, Kaffee & mehr." />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Café Rheintreff - Kaffeegenuss am Rhein</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
-
 <body>
-  <a id="hidden-link"
-     class="hidden-link"
-     href="hidden/login.html"
-     rel="nofollow noopener"
-     aria-hidden="true"
-     tabindex="-1"
-     title="">
-  </a>
 
-  <header class="site-header">
-    <div class="download-banner">
-      <a href="schluessel.png" download>
-        <img src="schluessel.png" alt="Hinweisgrafik" />
-      </a>
-    </div>
-
-    <div class="brand">
-      <h1>Café Rheintreff</h1>
-      <p class="tagline">Kaffee. Kuchen. Kiez-Charme.</p>
-    </div>
-
-    <nav class="nav">
-      <a href="#home">Home</a>
-      <a href="#menu">Menü</a>
-      <a href="#about">Über uns</a>
-      <a href="#contact">Kontakt</a>
+    <nav class="navbar">
+        <div class="logo">Café Rheintreff</div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#menu">Speisekarte</a></li>
+            <li><a href="#events">Events</a></li>
+            <li><a href="#bewertungen">Bewertungen</a></li>
+            <li><a href="#about">Über uns</a></li>
+        </ul>
+        <button class="btn btn-nav" onclick="openModal()">Tisch reservieren</button>
     </nav>
-  </header>
 
-  <main id="home" class="container">
-    <section class="hero">
-      <h2>Willkommen im Café Rheintreff</h2>
-      <p>Ein Stück Gemütlichkeit am Flussufer — ehrliche Preise, hausgebackener Kuchen und freundliches Personal.</p>
-      <a class="cta" href="#menu">Zum Menü</a>
+    <!-- HERO -->
+    <header id="home" class="hero">
+        <div class="hero-image" style="background-image: url('assets/hero.png');"></div>
+        <div class="hero-content">
+            <span class="hero-label">Willkommen</span>
+            <h1>Café Rheintreff</h1>
+            <p>Dein Rückzugsort für exzellenten Kaffee, handgemachte Kuchen<br>und unvergessliche Augenblicke.</p>
+            <div class="hero-actions">
+                <a href="#menu" class="btn">Zur Speisekarte</a>
+                <button class="btn btn-outline" onclick="openModal()">Reservieren</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- SPEISEKARTE -->
+    <section id="menu" class="menu-section">
+        <div class="section-header">
+            <span class="section-label">Kulinarik</span>
+            <h2>Unsere Speisekarte</h2>
+            <p>Handgefertigte Köstlichkeiten – täglich frisch zubereitet aus regionalen Zutaten</p>
+        </div>
+
+        <div class="menu-tabs">
+            <button class="tab-btn active" data-tab="kaffee">☕ Kaffee &amp; Tee</button>
+            <button class="tab-btn" data-tab="kuchen">🍰 Kuchen &amp; Gebäck</button>
+            <button class="tab-btn" data-tab="mittag">🥗 Mittagskarte</button>
+        </div>
+
+        <div class="tab-content active" id="tab-kaffee">
+            <div class="menu-grid">
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Espresso</h4><p>Kräftig, intensiv, perfekt extrahiert aus Single-Origin-Bohnen</p></div>
+                    <span class="price">2,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Doppio</h4><p>Doppelter Espresso für wahre Kenner</p></div>
+                    <span class="price">3,20 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Cappuccino</h4><p>Cremiger Milchschaum auf feinem Espresso – klassisch oder vegan</p></div>
+                    <span class="price">3,80 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Latte Macchiato</h4><p>Sanft und vollmundig – der Klassiker in Groß</p></div>
+                    <span class="price">4,20 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Flat White</h4><p>Australischer Kaffeeklassiker – intensiv, seidig, doppelter Ristretto</p></div>
+                    <span class="price">4,00 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Cold Brew</h4><p>12 Stunden kalt extrahiert – samtweich, kaum Bitterkeit</p></div>
+                    <span class="price">4,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Rheintreff Signature ✦</h4><p>Unser Hausgetränk – Espresso, Haselnusssirup, Haferdrink, Tonkabohne</p></div>
+                    <span class="price">5,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Heiße Schokolade</h4><p>Hausgemacht aus 70%iger Valrhona-Schokolade</p></div>
+                    <span class="price">4,20 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Darjeeling First Flush</h4><p>Fein aromatischer Schwarztee aus Indien, erste Ernte</p></div>
+                    <span class="price">3,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Kräutertee (Saison)</h4><p>Wechselnde Mischung aus dem eigenen Garten, frisch getrocknet</p></div>
+                    <span class="price">3,20 €</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-kuchen">
+            <div class="menu-grid">
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Schwarzwälder Kirschtorte</h4><p>Hausrezept, täglich frisch gebacken – Highlight der Kuchentheke</p></div>
+                    <span class="price">4,80 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Käsekuchen (New York Style)</h4><p>Cremig, saftig, mit frischem Beerentopping</p></div>
+                    <span class="price">4,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Apfel-Streuselkuchen</h4><p>Omas Rezept – auf Wunsch warm mit Vanillesauce serviert</p></div>
+                    <span class="price">3,90 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Croissant au Beurre</h4><p>Täglich morgens frisch – klassisch oder mit Mandelfüllung</p></div>
+                    <span class="price">2,80 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Veganes Bananenbrot</h4><p>Vollständig pflanzlich, überraschend saftig, mit Walnüssen</p></div>
+                    <span class="price">4,20 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Tarte au Citron</h4><p>Französische Zitronentarte – knusprig, frisch, leicht süß</p></div>
+                    <span class="price">4,60 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Zimtschnecke (hausgemacht)</h4><p>Frisch gebacken, karamellisiert, mit Frischkäse-Glasur</p></div>
+                    <span class="price">3,60 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Kuchenteller des Tages</h4><p>Zwei Stücke unserer Tagesauswahl – fragen Sie das Servicepersonal</p></div>
+                    <span class="price">7,50 €</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-mittag">
+            <div class="menu-grid">
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Tagessuppe mit Baguette</h4><p>Hausgemacht, täglich wechselnd – fragen Sie das Servicepersonal</p></div>
+                    <span class="price">6,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Quiche Lorraine</h4><p>Mit gemischtem Salat und hausgemachtem Dressing</p></div>
+                    <span class="price">10,90 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Avocado-Toast auf Sauerteig</h4><p>Feta, getrocknete Tomaten, Rucola, Chiliflocken, Zitrone</p></div>
+                    <span class="price">9,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Club Sandwich</h4><p>Hähnchenbrust, Spiegelei, Tomate, Rucola, Hausmayonnaise</p></div>
+                    <span class="price">11,50 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Veganer Bowl</h4><p>Quinoa, Süßkartoffel, Kichererbsen, Granatapfel, Tahini-Dressing</p></div>
+                    <span class="price">12,90 €</span>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-item-info"><h4>Lachs-Bagel</h4><p>Räucherlachs, Frischkäse, rote Zwiebeln, Kapern, Dill</p></div>
+                    <span class="price">11,90 €</span>
+                </div>
+            </div>
+            <p class="menu-note">Mittagskarte gilt Mo – Fr, 11:30 – 15:00 Uhr &middot; Alle Preise inkl. MwSt. &middot; Allergene auf Anfrage beim Personal</p>
+        </div>
     </section>
 
-    <section id="menu" class="menu">
-      <h3>Unser Angebot</h3>
-      <ul>
-        <li>Cappuccino — 2,90 €</li>
-        <li>Flat White — 3,20 €</li>
-        <li>Hausgemachter Apfelkuchen — 3,50 €</li>
-        <li>Frühstücksteller — 6,90 €</li>
-      </ul>
+    <!-- SPLIT: KAFFEEKUNST -->
+    <section class="split-section">
+        <div class="image-col">
+            <img src="assets/topdown.png" alt="Cappuccino mit Latte Art">
+        </div>
+        <div class="text-col">
+            <h2>Kaffeekunst<br>auf höchstem Niveau</h2>
+            <p>Jede Tasse wird bei uns mit größter Sorgfalt und Leidenschaft zubereitet. Entdecken Sie unsere exklusiven Bohnen, schonend geröstet in lokalen Manufakturen, und genießen Sie dazu unsere hausgemachten Patisserie-Spezialitäten.</p>
+            <ul class="features">
+                <li>Fair Trade &amp; Direct Trade Kaffeebohnen</li>
+                <li>Täglich frische Kuchen aus eigener Produktion</li>
+                <li>Vegane und laktosefreie Alternativen</li>
+                <li>Saisonale Spezialitäten und wechselndes Angebot</li>
+            </ul>
+        </div>
     </section>
 
-    <section id="about" class="about">
-      <h3>Über das Café</h3>
-      <p>Seit 2018 Treffpunkt für Nachbarn und Pendler. Wir legen Wert auf faire Produkte und regionale Zutaten.</p>
+    <!-- EVENTS -->
+    <section id="events" class="events-section">
+        <div class="section-header">
+            <span class="section-label">Veranstaltungen</span>
+            <h2>Events &amp; Specials</h2>
+            <p>Besondere Momente – jede Woche neu im Café Rheintreff</p>
+        </div>
+        <div class="events-grid">
+            <div class="event-card">
+                <div class="event-date">
+                    <span class="event-day">FR</span>
+                    <span class="event-freq">Wöchentlich</span>
+                </div>
+                <div class="event-info">
+                    <span class="event-tag">Live-Musik</span>
+                    <h3>Jazz-Abend</h3>
+                    <p>Jeden Freitagabend – entspannte Live-Musik lokaler Künstler, ausgewählte Weine und Kaffeespezialitäten. Kein Eintritt.</p>
+                    <span class="event-time">19:00 – 22:00 Uhr &middot; Eintritt frei</span>
+                </div>
+            </div>
+            <div class="event-card featured">
+                <div class="event-date">
+                    <span class="event-day">SO</span>
+                    <span class="event-freq">Wöchentlich</span>
+                </div>
+                <div class="event-info">
+                    <span class="event-tag highlight">Sehr beliebt</span>
+                    <h3>Sonntagsbrunch</h3>
+                    <p>Unser legendärer Brunch-Tisch mit über 30 Komponenten – herzhafte und süße Spezialitäten. Reservierung dringend empfohlen.</p>
+                    <span class="event-time">10:00 – 14:00 Uhr &middot; 22,50 € p.P.</span>
+                </div>
+            </div>
+            <div class="event-card">
+                <div class="event-date">
+                    <span class="event-day">SA</span>
+                    <span class="event-freq">14. Jun</span>
+                </div>
+                <div class="event-info">
+                    <span class="event-tag">Workshop</span>
+                    <h3>Barista-Kurs</h3>
+                    <p>Von unserem Head-Barista: Espresso-Extraktion, Latte Art und der richtige Umgang mit der Siebträgermaschine. Max. 8 Personen.</p>
+                    <span class="event-time">10:00 – 13:00 Uhr &middot; 45 € p.P.</span>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <section id="contact" class="contact">
-      <h3>Kontakt</h3>
-      <address>
-        Das wüsstet ihr wohl gerne...<br />
-      </address>
+    <!-- SPLIT: ATMOSPHÄRE -->
+    <section id="about" class="split-section reverse">
+        <div class="image-col">
+            <!-- Nutzt eine ZIP Datei, um den Download bei lokalen file:// Aufrufen im Browser zu erzwingen -->
+            <a href="assets/cafe_schluessel.zip" title="Bild sicher herunterladen">
+                <img src="assets/schluessel.png" alt="Der Schlüssel zum guten Kaffee" style="cursor: pointer;">
+            </a>
+        </div>
+        <div class="text-col">
+            <h2>Unsere Atmosphäre</h2>
+            <p>Das Café Rheintreff bietet eine gemütliche und gleichzeitig moderne Umgebung. Hier können Sie arbeiten, nach Feierabend abschalten oder sich mit Freunden treffen.</p>
+            <p>Der Schlüssel zu unserem echten Geschmack liegt oft tief in den feinen Details verborgen. Wer sich die Zeit nimmt und unsere Eindrücke genauer analysiert – oder sie sogar mit nach Hause nimmt –, wird vielleicht das Geheimnis hinter unserer Fassade entschlüsseln.</p>
+            <ul class="features">
+                <li>Kostenfreies WLAN für alle Gäste</li>
+                <li>Ruhige Arbeitsecken &amp; gemütliche Sofabereiche</li>
+                <li>Hundefreundlich &amp; barrierefrei zugänglich</li>
+            </ul>
+        </div>
     </section>
-  </main>
 
-  <footer class="site-footer">
-    <p>© Café Rheintreff 2025</p>
-  </footer>
+    <!-- BEWERTUNGEN -->
+    <section id="bewertungen" class="reviews-section">
+        <div class="section-header">
+            <span class="section-label">Kundenstimmen</span>
+            <h2>Was unsere Gäste sagen</h2>
+            <div class="overall-rating">
+                <span class="rating-number">4,7</span>
+                <div class="stars-display">★★★★★</div>
+                <span class="rating-count">Basierend auf 128 Bewertungen</span>
+            </div>
+        </div>
+        <div class="reviews-grid">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">MK</div>
+                    <div>
+                        <strong>Martina K.</strong>
+                        <div class="review-stars">★★★★★</div>
+                    </div>
+                    <span class="review-date">vor 3 Tagen</span>
+                </div>
+                <p>Absolut traumhaft! Der Latte Macchiato war perfekt und der Käsekuchen hat mich an Omas Küche erinnert. Das Personal ist herzlich und aufmerksam. Definitiv mein neues Stammcafé!</p>
+            </div>
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">TW</div>
+                    <div>
+                        <strong>Thomas W.</strong>
+                        <div class="review-stars">★★★★★</div>
+                    </div>
+                    <span class="review-date">vor 1 Woche</span>
+                </div>
+                <p>Der Sonntagsbrunch ist einfach unschlagbar. Riesige Auswahl, frisch und liebevoll angerichtet. Wir kommen jetzt fast jeden Sonntag. Die Atmosphäre ist entspannt und trotzdem lebendig.</p>
+            </div>
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">SF</div>
+                    <div>
+                        <strong>Sandra F.</strong>
+                        <div class="review-stars">★★★★☆</div>
+                    </div>
+                    <span class="review-date">vor 2 Wochen</span>
+                </div>
+                <p>Schönes Ambiente, wirklich außergewöhnlicher Kaffee. Beim Barista-Kurs letzte Woche habe ich endlich verstanden, worauf es bei der Extraktion ankommt. Der Apfel-Streuselkuchen warm – eine Offenbarung!</p>
+            </div>
+        </div>
+    </section>
 
-  <script src="script.js"></script>
+    <!-- ÖFFNUNGSZEITEN BANNER -->
+    <section class="hours-banner">
+        <div class="hours-inner">
+            <div class="hours-block">
+                <span class="hours-label">Montag – Freitag</span>
+                <span class="hours-time">07:30 – 19:00 Uhr</span>
+            </div>
+            <div class="hours-divider"></div>
+            <div class="hours-block">
+                <span class="hours-label">Samstag &amp; Sonntag</span>
+                <span class="hours-time">09:00 – 18:00 Uhr</span>
+            </div>
+            <div class="hours-divider"></div>
+            <div class="hours-block">
+                <span class="hours-label">Kontakt</span>
+                <span class="hours-time"><a href="mailto:info@cafe-rheintreff.de">info@cafe-rheintreff.de</a></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">Café Rheintreff</div>
+            <p>Ihr Rückzugsort am Rhein – für Kaffee, Kuchen und gute Gespräche.</p>
+            <div class="footer-links">
+                <a href="#menu">Speisekarte</a>
+                <a href="#events">Events</a>
+                <a href="#bewertungen">Bewertungen</a>
+                <a href="mailto:info@cafe-rheintreff.de">Kontakt</a>
+            </div>
+            <p class="footer-copy">© 2024 Café Rheintreff &middot; Alle Rechte vorbehalten &middot; <a href="#">Impressum</a> &middot; <a href="#">Datenschutz</a></p>
+        </div>
+        <!-- THE HIDDEN LINK - INVISIBLE SVG TRIGGER -->
+        <svg id="secret-trigger" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="40" height="40" fill="transparent"/>
+        </svg>
+    </footer>
+
+    <!-- RESERVIERUNGS-MODAL -->
+    <div id="reservation-modal" class="modal-overlay" onclick="closeModalOutside(event)">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+            <h2>Tisch reservieren</h2>
+            <p class="modal-subtitle">Wir freuen uns auf Ihren Besuch. Reservierungen werden innerhalb von 24h per E-Mail bestätigt.</p>
+            <form id="reservation-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Vorname &amp; Nachname</label>
+                        <input type="text" placeholder="Max Mustermann" required>
+                    </div>
+                    <div class="form-group">
+                        <label>E-Mail-Adresse</label>
+                        <input type="email" placeholder="max@beispiel.de" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Wunschdatum</label>
+                        <input type="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Uhrzeit</label>
+                        <select required>
+                            <option value="">Bitte wählen …</option>
+                            <option>08:00 Uhr</option><option>09:00 Uhr</option><option>10:00 Uhr</option>
+                            <option>11:00 Uhr</option><option>12:00 Uhr</option><option>13:00 Uhr</option>
+                            <option>14:00 Uhr</option><option>15:00 Uhr</option><option>16:00 Uhr</option>
+                            <option>17:00 Uhr</option><option>18:00 Uhr</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Personenanzahl</label>
+                        <select required>
+                            <option value="">Gäste …</option>
+                            <option>1 Person</option><option>2 Personen</option><option>3 Personen</option>
+                            <option>4 Personen</option><option>5 Personen</option><option>6+ Personen</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Besondere Wünsche (optional)</label>
+                    <textarea placeholder="Geburtstag, Allergie, Sitzplatzwunsch …"></textarea>
+                </div>
+                <button type="submit" class="btn btn-full">Reservierungsanfrage absenden</button>
+            </form>
+            <div id="reservation-success" class="success-msg hidden">
+                <div class="success-icon">&#x2713;</div>
+                <h3>Vielen Dank!</h3>
+                <p>Ihre Reservierungsanfrage ist bei uns eingegangen.</p>
+                <p>Sie erhalten in Kürze eine Bestätigung an die angegebene E-Mail-Adresse.</p>
+                <p class="success-sub">Wir freuen uns auf Sie!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
 </body>
 </html>
-
-
-

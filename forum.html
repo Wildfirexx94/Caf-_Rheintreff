@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURE NET - Internes Kommunikationsforum</title>
+    <script>
+        if (sessionStorage.getItem('auth_token') !== 'token_granted') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --panel: #111111;
+            --post-bg: #1a1a1a;
+            --text: #c8c8c8;
+            --accent: #cc2936;
+            --accent-glow: rgba(204,41,54,0.35);
+            --admin: #e8850a;
+            --border: #222222;
+            --online: #22c55e;
+            --muted: #555;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow-x: hidden; }
+
+        /* ── HEADER ─────────────────────────────────────── */
+        header {
+            background: #080808;
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+        }
+        .header-left { display: flex; align-items: center; gap: 1.5rem; }
+        header h1 { font-size: 1.2rem; color: #fff; font-family: 'Courier New', monospace; display: flex; align-items: center; gap: 0.8rem; }
+        .tag { font-size: 0.62rem; background: #1a4a1a; color: #4ade80; padding: 0.2rem 0.6rem; border-radius: 3px; letter-spacing: 1px; border: 1px solid #2d6b2d; }
+
+        .header-search {
+            display: flex; align-items: center; background: #161616; border: 1px solid #2a2a2a;
+            border-radius: 6px; padding: 0 0.8rem; gap: 0.5rem; width: 240px;
+        }
+        .header-search input {
+            background: none; border: none; outline: none; color: var(--text);
+            font-size: 0.85rem; padding: 0.45rem 0; width: 100%;
+        }
+        .header-search span { color: #444; font-size: 0.9rem; }
+
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .hdr-icon { position: relative; cursor: pointer; color: #666; font-size: 1.1rem; transition: color 0.2s; padding: 0.3rem; }
+        .hdr-icon:hover { color: #aaa; }
+        .hdr-badge {
+            position: absolute; top: -2px; right: -4px;
+            background: var(--accent); color: white; font-size: 0.6rem;
+            font-weight: 700; border-radius: 50%; width: 15px; height: 15px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .header-user { font-size: 0.82rem; color: #666; border-left: 1px solid #222; padding-left: 1rem; }
+        .header-user strong { color: #4ade80; }
+        #logout-btn {
+            background: transparent; color: #555; border: 1px solid #2a2a2a;
+            padding: 0.35rem 0.9rem; cursor: pointer; border-radius: 4px; font-size: 0.8rem;
+            transition: all 0.2s; font-family: 'Courier New', monospace;
+        }
+        #logout-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+
+        /* ── LAYOUT ─────────────────────────────────────── */
+        .container { display: flex; max-width: 1400px; margin: 1.5rem auto; gap: 1.5rem; padding: 0 1.5rem; }
+        .main-area { flex: 3; }
+        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+
+        /* ── PANELS ─────────────────────────────────────── */
+        .panel {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden;
+        }
+        .panel-header {
+            padding: 0.9rem 1.4rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .panel-header h2 { font-size: 0.95rem; font-weight: 600; color: #ddd; letter-spacing: 0.5px; }
+        .panel-header .panel-meta { font-size: 0.75rem; color: #444; }
+
+        /* ── THREAD LIST ─────────────────────────────────── */
+        .thread-item {
+            padding: 1rem 1.4rem; border-bottom: 1px solid var(--border);
+            cursor: pointer; transition: background 0.15s;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .thread-item:last-child { border-bottom: none; }
+        .thread-item:hover { background: #161616; }
+        .thread-item.unread .thread-title { color: #fff; font-weight: 600; }
+        .thread-item.pinned { border-left: 3px solid var(--admin); }
+        .thread-item.admin-thread { border-left: 3px solid var(--accent); }
+
+        .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+        .read-dot { width: 8px; height: 8px; border-radius: 50%; background: transparent; flex-shrink: 0; }
+
+        .thread-body { flex: 1; min-width: 0; }
+        .thread-tags { display: flex; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+        .t-tag { font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 3px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .t-tag.wichtig { background: rgba(204,41,54,0.2); color: var(--accent); border: 1px solid rgba(204,41,54,0.3); }
+        .t-tag.befehl { background: rgba(232,133,10,0.2); color: var(--admin); border: 1px solid rgba(232,133,10,0.3); }
+        .t-tag.logistik { background: rgba(34,197,94,0.1); color: #4ade80; border: 1px solid rgba(34,197,94,0.2); }
+        .t-tag.info { background: rgba(100,100,255,0.1); color: #88aaff; border: 1px solid rgba(100,100,255,0.2); }
+        .t-tag.aufklaerung { background: rgba(255,200,0,0.1); color: #fbbf24; border: 1px solid rgba(255,200,0,0.2); }
+
+        .thread-title { font-size: 0.93rem; color: #bbb; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .thread-meta { font-size: 0.75rem; color: #444; }
+        .thread-meta .author-admin { color: var(--admin); font-weight: 600; }
+
+        .thread-stats { text-align: right; font-size: 0.75rem; color: #444; flex-shrink: 0; min-width: 80px; }
+        .thread-stats .stat-num { color: #666; font-size: 0.85rem; font-weight: 600; }
+
+        /* ── THREAD VIEW ─────────────────────────────────── */
+        .thread-view { display: none; }
+        .thread-view-header {
+            padding: 1.2rem 1.4rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .back-btn {
+            background: transparent; color: #555; border: 1px solid #333;
+            padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.82rem;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .back-btn:hover { color: #aaa; border-color: #555; }
+        .thread-view-header h2 { font-size: 1rem; color: #ddd; font-weight: 500; }
+
+        .post-container { padding: 1rem 1.4rem; display: flex; flex-direction: column; gap: 1px; }
+
+        /* ── POSTS ───────────────────────────────────────── */
+        .post {
+            background: #151515; border-radius: 6px; padding: 1.2rem 1.4rem;
+            display: flex; gap: 1rem; animation: fadeIn 0.3s ease-out;
+            border: 1px solid transparent; margin-bottom: 0.6rem;
+        }
+        .post.alert { border-color: rgba(204,41,54,0.25); background: rgba(204,41,54,0.04); }
+        .post.admin-post { border-color: rgba(232,133,10,0.3); background: rgba(232,133,10,0.04); }
+        .post.new-post { border-color: rgba(34,197,94,0.2); background: rgba(34,197,94,0.03); }
+
+        /* ── USER SIDEBAR (within post) ──────────────────── */
+        .post-user-col { display: flex; flex-direction: column; align-items: center; min-width: 80px; gap: 0.5rem; }
+        .avatar {
+            width: 42px; height: 42px; border-radius: 6px;
+            background: #2a2a2a; display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: #888; font-family: monospace; font-size: 0.85rem;
+            border: 2px solid #333; flex-shrink: 0; text-transform: uppercase;
+        }
+        .post.alert .avatar { background: rgba(204,41,54,0.3); color: var(--accent); border-color: var(--accent); }
+        .post.admin-post .avatar { background: rgba(232,133,10,0.25); color: var(--admin); border-color: var(--admin); }
+        .post.new-post .avatar { background: rgba(34,197,94,0.2); color: #4ade80; border-color: #2d6b2d; }
+
+        .user-info-block { text-align: center; }
+        .username { font-size: 0.8rem; font-weight: 700; color: #bbb; display: block; }
+        .post.alert .username { color: var(--accent); }
+        .post.admin-post .username { color: var(--admin); }
+        .post.new-post .username { color: #4ade80; }
+
+        .user-rank { font-size: 0.65rem; color: #444; display: block; margin-top: 0.15rem; }
+        .user-stats { font-size: 0.62rem; color: #363636; margin-top: 0.3rem; line-height: 1.6; }
+        .admin-badge {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            background: rgba(232,133,10,0.2); color: var(--admin);
+            font-size: 0.6rem; font-weight: 700; letter-spacing: 0.5px;
+            padding: 0.15rem 0.4rem; border-radius: 3px; border: 1px solid rgba(232,133,10,0.4);
+            margin-top: 0.3rem; text-transform: uppercase;
+        }
+
+        /* ── POST CONTENT ────────────────────────────────── */
+        .post-content { flex: 1; }
+        .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.7rem; }
+        .post-date { font-size: 0.75rem; color: #3a3a3a; }
+        .post-body p { line-height: 1.6; color: #c0c0c0; font-size: 0.9rem; }
+        .post-body .code-word { background: rgba(255,255,255,0.05); color: #fbbf24; padding: 0.1rem 0.4rem; border-radius: 3px; font-family: monospace; font-size: 0.85rem; border: 1px solid #2a2a2a; }
+
+        /* ── TYPING INDICATOR ────────────────────────────── */
+        .typing-indicator {
+            font-size: 0.82rem; color: #444; font-style: italic;
+            display: none; align-items: center; gap: 0.5rem;
+            margin: 0.5rem 1.4rem 1rem; opacity: 0; transition: opacity 0.5s;
+        }
+        .dot { width: 4px; height: 4px; background: #4ade80; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        /* ── SIDEBAR PANELS ──────────────────────────────── */
+        .sidebar-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .sidebar-panel-header { padding: 0.75rem 1.1rem; border-bottom: 1px solid var(--border); }
+        .sidebar-panel-header h3 { font-size: 0.75rem; font-weight: 700; color: #444; letter-spacing: 2px; text-transform: uppercase; }
+        .sidebar-panel-body { padding: 0.8rem 1.1rem; }
+
+        .member-row { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid #161616; }
+        .member-row:last-child { border-bottom: none; }
+        .member-name { font-size: 0.85rem; color: #aaa; }
+        .member-name.admin { color: var(--admin); font-weight: 700; }
+        .member-name.online { color: #ccc; }
+        .online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--online); box-shadow: 0 0 5px var(--online); }
+        .offline-dot { width: 7px; height: 7px; border-radius: 50%; background: #333; }
+        .member-role { font-size: 0.7rem; color: #444; }
+
+        .stat-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid #161616; font-size: 0.82rem; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #555; }
+        .stat-val { color: #888; font-weight: 600; }
+        .stat-val.green { color: var(--online); }
+        .stat-val.orange { color: #fbbf24; }
+        .stat-val.red { color: var(--accent); }
+
+        /* ── TRAINER TOOL ────────────────────────────────── */
+        .trainer-tool {
+            position: fixed; bottom: 24px; right: 24px;
+            background: #0d1f10; border: 2px solid #22c55e;
+            border-radius: 10px; padding: 1.3rem 1.5rem;
+            color: #ddd; z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(34,197,94,0.1);
+            max-width: 320px; animation: slideIn 0.8s cubic-bezier(0.1, 1.5, 0.5, 1);
+        }
+        .trainer-tool h3 { color: #4ade80; margin-bottom: 0.6rem; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem; }
+        .trainer-tool p { font-size: 0.83rem; line-height: 1.5; margin-bottom: 1rem; color: #aaa; }
+        .btn-download { display: block; text-align: center; background: #22c55e; color: #000; text-decoration: none; padding: 0.55rem; border-radius: 5px; font-weight: 700; font-size: 0.85rem; transition: background 0.2s; }
+        .btn-download:hover { background: #16a34a; }
+
+        /* ── ANIMATIONS ──────────────────────────────────── */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(40px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>SECURE NET <span class="tag">VERBINDUNG SICHER</span></h1>
+            <div class="header-search">
+                <span>🔍</span>
+                <input type="text" placeholder="Forum durchsuchen …" onclick="return false;">
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="hdr-icon" title="Benachrichtigungen">🔔<span class="hdr-badge">3</span></div>
+            <div class="hdr-icon" title="Private Nachrichten">✉️<span class="hdr-badge">1</span></div>
+            <div class="header-user">Angemeldet als <strong>NRW</strong></div>
+            <button id="logout-btn">VERBINDUNG TRENNEN</button>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- ══ MAIN AREA ══════════════════════════════════════════════════════ -->
+        <div class="main-area">
+
+            <!-- THREAD LIST -->
+            <div id="thread-list" class="panel">
+                <div class="panel-header">
+                    <h2>📋 Foren-Übersicht — <span style="color:#444; font-weight:400;">Verschlüsselt · AES-256</span></h2>
+                    <span class="panel-meta">11 aktive Threads · Letzte Aktivität: vor 12 Min.</span>
+                </div>
+
+                <!-- Thread 1 – pinned, admin, unread -->
+                <div class="thread-item pinned unread" onclick="openThread('thread-1')">
+                    <div class="unread-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag wichtig">Wichtig</span><span class="t-tag befehl">Befehl</span></div>
+                        <div class="thread-title">📌 [BEFEHL] Vollkontakt-Training Neuss – Orga & Sicherheit</div>
+                        <div class="thread-meta">Von <span class="author-admin">Wildfirexx94</span> · Letzter Beitrag: <span class="list-date" data-ago="12">Heute, 08:42</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">4</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 2 -->
+                <div class="thread-item" onclick="openThread('thread-2')">
+                    <div class="read-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag info">Zirkel</span></div>
+                        <div class="thread-title">Sparring-Zirkel Düsseldorf (Flingern) – Status</div>
+                        <div class="thread-meta">Von Division_DUS · Letzter Beitrag: <span class="list-date" data-days="1" data-time="23:10">Gestern, 23:10</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">3</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 3 -->
+                <div class="thread-item unread" onclick="openThread('thread-3')">
+                    <div class="unread-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag logistik">Logistik</span></div>
+                        <div class="thread-title">Ausrüstungs-Caches Köln-Kalk / Manöver B</div>
+                        <div class="thread-meta">Von K-Stadt_Kämpfer · Letzter Beitrag: <span class="list-date" data-days="2" data-time="15:30">Vorgestern, 15:30</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">3</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 4 -->
+                <div class="thread-item unread admin-thread" onclick="openThread('thread-4')">
+                    <div class="unread-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag logistik">Logistik</span><span class="t-tag wichtig">Dringend</span></div>
+                        <div class="thread-title">Kuriere für Lieferung <span style="font-family:monospace;">"Z"</span> – Hafen</div>
+                        <div class="thread-meta">Von <span class="author-admin">Wildfirexx94</span> · Letzter Beitrag: <span class="list-date" data-days="1" data-time="12:00">Gestern, 12:00</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">4</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 5 -->
+                <div class="thread-item admin-thread" onclick="openThread('thread-5')">
+                    <div class="read-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag befehl">Befehl</span></div>
+                        <div class="thread-title">📌 [BEFEHL] Kommunikationsprotokolle verschärft – .xpi Pflicht</div>
+                        <div class="thread-meta">Von <span class="author-admin">Wildfirexx94</span> · Letzter Beitrag: <span class="list-date" data-days="1" data-time="09:10">Gestern, 09:10</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">2</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 6 -->
+                <div class="thread-item" onclick="openThread('thread-6')">
+                    <div class="read-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag aufklaerung">Aufklärung</span></div>
+                        <div class="thread-title">Aufklärungsbericht: Observierung Wuppertal-Oberbarmen</div>
+                        <div class="thread-meta">Von Späher_W · Letzter Beitrag: <span class="list-date" data-days="3" data-time="18:40">Vor 3 Tagen</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">3</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 7 -->
+                <div class="thread-item" onclick="openThread('thread-7')">
+                    <div class="read-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag info">Finanzen</span></div>
+                        <div class="thread-title">Kameradschaftskasse <span class="dyn-quarter" data-days="8">Q2</span> – Beiträge &amp; Ausstände</div>
+                        <div class="thread-meta">Von Kassenwart · Letzter Beitrag: <span class="list-date" data-days="7" data-time="09:00">Letzte Woche</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">5</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 8 -->
+                <div class="thread-item unread" onclick="openThread('thread-8')">
+                    <div class="unread-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag info">Aktion</span></div>
+                        <div class="thread-title">Aktion "NACHTNEBEL" – Essen / Bochum – Einteilung</div>
+                        <div class="thread-meta">Von Revier_Stimme · Letzter Beitrag: <span class="list-date" data-days="9" data-time="20:15">Letzte Woche</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">6</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 9 – NEU -->
+                <div class="thread-item unread admin-thread" onclick="openThread('thread-9')">
+                    <div class="unread-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag befehl">Befehl</span><span class="t-tag wichtig">Sicherheit</span></div>
+                        <div class="thread-title">Neue Mitglieder: Überprüfungsprotokoll (Stufe 2)</div>
+                        <div class="thread-meta">Von <span class="author-admin">Wildfirexx94</span> · Letzter Beitrag: <span class="list-date" data-days="4" data-time="22:15">Vor 5 Tagen</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">3</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 10 – NEU -->
+                <div class="thread-item" onclick="openThread('thread-10')">
+                    <div class="read-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag aufklaerung">OPSEC</span></div>
+                        <div class="thread-title">Tails OS v6 – Update-Pflicht &amp; Checkliste für saubere Sessions</div>
+                        <div class="thread-meta">Von Schatten · Letzter Beitrag: <span class="list-date" data-days="3" data-time="10:00">Vor 4 Tagen</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">4</div><div>Antworten</div></div>
+                </div>
+
+                <!-- Thread 11 – NEU -->
+                <div class="thread-item unread" onclick="openThread('thread-11')">
+                    <div class="unread-dot"></div>
+                    <div class="thread-body">
+                        <div class="thread-tags"><span class="t-tag logistik">Extern</span></div>
+                        <div class="thread-title">Kontakt "Nordsturm83" – Weitergabe Materialien NRW-Nord</div>
+                        <div class="thread-meta">Von Kommando_Rheinland · Letzter Beitrag: <span class="list-date" data-days="6" data-time="14:45">Vor 6 Tagen</span></div>
+                    </div>
+                    <div class="thread-stats"><div class="stat-num">2</div><div>Antworten</div></div>
+                </div>
+
+            </div><!-- /thread-list -->
+
+
+            <!-- ══ THREAD 1 ═══════════════════════════════════════════════════ -->
+            <div id="thread-1" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>[BEFEHL] Vollkontakt-Training Neuss – Orga &amp; Sicherheit</h2>
+                </div>
+                <div class="post-container" id="chat-box-1">
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-ago="53">Heute, 08:34 Uhr</span></div>
+                            <div class="post-body"><p>ACHTUNG KAMERADEN: VK-Training Neuss dieses Wochenende ist bestätigt. Treffpunkt: alte Industriehalle Rheinhafen, Halle 4. Samstag <span class="code-word">23:00</span>. Wer nicht erscheint, trägt Konsequenzen. Handys bleiben zu Hause – kein Ausnahme. Codewort am Eingang: <span class="code-word">STAHLWACHT</span>. Nur Bekannte, keine Mitläufer.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">N4</div>
+                            <div class="user-info-block">
+                                <span class="username">Nutzer_04</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2024<br>Beiträge: 12</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-ago="47">Heute, 08:40 Uhr</span></div>
+                            <div class="post-body"><p>Wie sieht es mit Überwachungskameras auf dem Gelände aus? Die <span class="code-word">ZP</span> patrouillieren dort in letzter Zeit häufiger.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-ago="45">Heute, 08:42 Uhr</span></div>
+                            <div class="post-body"><p>Darum kümmert sich <strong style="color:#4ade80;">Schatten</strong>. Er manipuliert den Zugangspunkt West – die Monitore zeigen ab 22:00 nur noch Loop von gestern. Keine Gegenfragen. Einfach zur Zeit erscheinen, <span class="code-word">STAHLWACHT</span> sagen und Fresse halten. Nutzer_04 – noch ein Post wie dieser und du fliegst raus.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">TF</div>
+                            <div class="user-info-block">
+                                <span class="username">Truppführer_2</span>
+                                <span class="user-rank">Truppführer</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 89</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-ago="12">Heute, 09:15 Uhr</span></div>
+                            <div class="post-body"><p>Verstanden. Trupp 2 kommt vollzählig – 7 Mann. Fahren in zwei Fahrzeugen, getrennte Routen wie beim letzten Mal in Köln. <span class="code-word">GS-2</span> übernimmt Einlasskontrolle ab 22:30.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="typing-indicator" id="typing-indicator">
+                    <span style="color:#4ade80;">Schatten</span>&nbsp;schreibt …
+                    <div style="display:flex; margin-left:4px; gap:3px;">
+                        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 2 ═══════════════════════════════════════════════════ -->
+            <div id="thread-2" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Sparring-Zirkel Düsseldorf (Flingern) – Status</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">DD</div>
+                            <div class="user-info-block">
+                                <span class="username">Division_DUS</span>
+                                <span class="user-rank">Gruppenleiter</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 234</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="21:00">Gestern, 21:00 Uhr</span></div>
+                            <div class="post-body"><p>Sparring-Zirkel <span class="code-word">DUS-7</span> trifft sich morgen 21:00 Uhr in der Hinterhof-Werkstatt Flingern, Zugang nur über die Seitengasse hinter dem Schlosserbetrieb. Codewort an der Tür: <span class="code-word">STAHLSCHMIEDE</span>. Bringt eigene Bandagen, kein geliehenem Zeug.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">FF</div>
+                            <div class="user-info-block">
+                                <span class="username">Flingern_Faust</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2023<br>Beiträge: 34</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="21:45">Gestern, 21:45 Uhr</span></div>
+                            <div class="post-body"><p>Roger. Ich habe am Wochenende <span class="code-word">ZP</span> vor der Werkstatt gesehen – zwei Leute, keine Uniform, aber einer hat fotografiert. Ist der Treff noch sicher?</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="23:10">Gestern, 23:10 Uhr</span></div>
+                            <div class="post-body"><p>Mach dir nicht in die Hosen, Flingern. Wir haben eigene Späher draußen postiert. Haltet euch exakt an die Anweisungen, gebt das Codewort durch und bleibt ruhig auf dem Hof. Wer auffällt, bekommt es mit mir zu tun. Disziplin – das ist keine Bitte.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 3 ═══════════════════════════════════════════════════ -->
+            <div id="thread-3" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Ausrüstungs-Caches Köln-Kalk / Manöver B</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">KK</div>
+                            <div class="user-info-block">
+                                <span class="username">K-Stadt_Kämpfer</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 89</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="2" data-time="14:02">Vorgestern, 14:02 Uhr</span></div>
+                            <div class="post-body"><p>Köln-Kalk: Caches in Depot <span class="code-word">K-4</span> und <span class="code-word">K-7</span> vollständig befüllt. Rucksäcke sind wie besprochen mit <span class="code-word">▲</span> markiert. Zivile Aufklärer waren in der Gegend – blieben ungesehen, Abstand gehalten.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="2" data-time="14:50">Vorgestern, 14:50 Uhr</span></div>
+                            <div class="post-body"><p>Bestätigt. Ausweichmanöver <span class="code-word">MANÖVER-B</span> am Kölner Hbf vorbereitet. Alle Routen liegen verschlüsselt auf dem Server. Wenn das Signal <span class="code-word">WOLFSGEHEUL</span> als Broadcast kommt, geht alles nahtlos in Plan B über. Keine Abweichungen – ich toleriere keine Improvisationen.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">TM</div>
+                            <div class="user-info-block">
+                                <span class="username">Taktik_Mitte</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2023<br>Beiträge: 28</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="2" data-time="15:30">Vorgestern, 15:30 Uhr</span></div>
+                            <div class="post-body"><p>Verstanden, Chef. Ausrüstung bleibt in den Fahrzeugen gebunkert bis zum Befehl. <span class="code-word">GS-3</span> ist bereit.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 4 ═══════════════════════════════════════════════════ -->
+            <div id="thread-4" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Kuriere für Lieferung "Z" – Hafen</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="10:15">Gestern, 10:15 Uhr</span></div>
+                            <div class="post-body"><p>Ich brauche für heute Nacht zwei Kuriere mit unauffälligen Fahrzeugen. Lieferung <span class="code-word">Z-PAKET</span> ist am Hafen eingetroffen. Wer hat Kapazitäten? Sofort melden.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">KT</div>
+                            <div class="user-info-block">
+                                <span class="username">Kette_77</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2023<br>Beiträge: 45</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="10:30">Gestern, 10:30 Uhr</span></div>
+                            <div class="post-body"><p>Silberner Transporter wieder fahrbereit. Kennzeichen ausgewechselt – läuft auf Hildegard M. aus Viersen. Ich kann übernehmen.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">ST</div>
+                            <div class="user-info-block">
+                                <span class="username">Sturmfront_West</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2023<br>Beiträge: 31</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="11:05">Gestern, 11:05 Uhr</span></div>
+                            <div class="post-body"><p>Fahrzeug verfügbar. Dunkelblauer Kombi, sauber. Stehe bereit.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="12:00">Gestern, 12:00 Uhr</span></div>
+                            <div class="post-body"><p>Kette und Sturmfront – fahrt heute Nacht <em>getrennt voneinander</em> Rastplatz A57 Nievenheim an. Wartet auf Signal über verschlüsselten Kanal. Ladung ist brisant. Keine Textnachrichten, kein Telefonieren. <span class="code-word">KSA</span> gilt ab sofort.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 5 ═══════════════════════════════════════════════════ -->
+            <div id="thread-5" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>[BEFEHL] Kommunikationsprotokolle verschärft – .xpi Pflicht</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="2" data-time="08:00">Vor 2 Tagen, 08:00 Uhr</span></div>
+                            <div class="post-body"><p>OFFIZIELLER BEFEHL: Ab sofort ist jeglicher externer Traffic über unser Firefox-<span class="code-word">.xpi</span>-Plugin zu routen. Die Überwachungsintensität der Gegenseite hat sich verdoppelt – wir haben Hinweise auf aktive <span class="code-word">ZP</span>-Observierung im Café-Netz. Wer erwischt wird, wie er unverschlüsselt im BK-Netz kommuniziert, wird gesperrt und in die Mangel genommen. Das Plugin findet ihr im Ermittler-Tool unten rechts – nach Login automatisch sichtbar.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">N9</div>
+                            <div class="user-info-block">
+                                <span class="username">Nutzer_09</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2024<br>Beiträge: 8</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="08:30">Gestern, 08:30 Uhr</span></div>
+                            <div class="post-body"><p>Ich bekomme auf Android Fehler bei der Installation. Gibt es einen alternativen Weg?</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="1" data-time="09:10">Gestern, 09:10 Uhr</span></div>
+                            <div class="post-body"><p>Ich habe nicht nach Ausreden gefragt, Nutzer_09. Nutz einen Desktop-Browser, sonst bist du draußen. Schatten hat die Installationsanleitung im <span class="code-word">OPSEC-Thread</span> hinterlegt. Lesen, umsetzen, fertig.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 6 ═══════════════════════════════════════════════════ -->
+            <div id="thread-6" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Aufklärungsbericht: Observierung Wuppertal-Oberbarmen</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">SW</div>
+                            <div class="user-info-block">
+                                <span class="username">Späher_W</span>
+                                <span class="user-rank">Aufklärer</span>
+                                <div class="user-stats">Dabei seit: 2023<br>Beiträge: 67</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="3" data-time="16:20">Vor 3 Tagen</span></div>
+                            <div class="post-body"><p>Vorsicht an alle im Bergischen: Nähe Schwebebahn-Endstation Oberbarmen hängen seit drei Tagen <span class="code-word">ZP</span> in nicht markierten Vans ab. Machen Fotos von unseren Leuten, die in die Gegend gehen. Kennzeichen: <span class="code-word">W-XX-???</span> – Nummern unlesbar gemacht.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">W8</div>
+                            <div class="user-info-block">
+                                <span class="username">Wacht.88</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2023<br>Beiträge: 43</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="3" data-time="17:05">Vor 3 Tagen</span></div>
+                            <div class="post-body"><p>Kann ich bestätigen. Haben gestern den Keller von Kamerad F. observiert – Bewegung bis 23:00 Uhr. Eindeutig koordinierte Aktion. <span class="code-word">KSA</span> sollte sofort gelten.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="3" data-time="18:40">Vor 3 Tagen</span></div>
+                            <div class="post-body"><p>Sofortiger Rückzug. Lokal 04 Wuppertal ist verbrannt – keine weiteren Treffen dort bis zur Freigabe durch mich. Alle Beweismittel im Keller von Kamerad F. vernichten. Späher_W – organisiere Reinigungstrupps für heute Nacht. <span class="code-word">KSA</span> gilt ab jetzt für den gesamten Bergischen Kreis.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 7 ═══════════════════════════════════════════════════ -->
+            <div id="thread-7" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Kameradschaftskasse <span class="dyn-quarter" data-days="8">Q2</span> – Beiträge &amp; Ausstände</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">KW</div>
+                            <div class="user-info-block">
+                                <span class="username">Kassenwart</span>
+                                <span class="user-rank">Kassenwart</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 178</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="8" data-time="10:00">Letzte Woche</span></div>
+                            <div class="post-body"><p>Kameraden: Kameradschaftskasse <span class="dyn-quarter" data-days="8">Q2</span> muss aufgefüllt werden. Unterstützung für inhaftierte Kameraden läuft weiter. Beiträge (Quartalsgeld) bitte an bekannten <span class="code-word">Drop-Punkten</span> oder per Krypto laut Darknet-Manual einzahlen. Kassenstand ist aktuell bei <span class="code-word">38%</span> des Quartalziels.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">TF</div>
+                            <div class="user-info-block">
+                                <span class="username">Truppführer_2</span>
+                                <span class="user-rank">Truppführer</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 89</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="8" data-time="19:30">Letzte Woche</span></div>
+                            <div class="post-body"><p>Trupp 2 vollständig bezahlt. Habe es gestern am <span class="code-word">Café Rheintreff</span> an dich übergeben – Kuvert wie immer.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="7" data-time="09:00">Letzte Woche</span></div>
+                            <div class="post-body"><p>Kassenwart: Ich erwarte bis morgen eine vollständige Ausstände-Liste. Wer nicht zahlt, profitiert nicht von der Bruderschaft und wird ausgeschlossen. Keine Ausnahmen.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 8 ═══════════════════════════════════════════════════ -->
+            <div id="thread-8" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Aktion "NACHTNEBEL" – Essen / Bochum – Einteilung</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">RS</div>
+                            <div class="user-info-block">
+                                <span class="username">Revier_Stimme</span>
+                                <span class="user-rank">Mitglied</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 156</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="9" data-time="18:50">Letzte Woche</span></div>
+                            <div class="post-body"><p>Druckerpressen in Bochum sind durch. Über 5.000 Flyer und Plakate für Aktion <span class="code-word">NACHTNEBEL</span> bereit. Brauche Leute zum Verteilen zwischen 02:00 und 04:00 Uhr. Wer ist dabei im Raum Essen-Nord?</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="9" data-time="20:15">Letzte Woche</span></div>
+                            <div class="post-body"><p>Organisation läuft. Material verteilt auf Schließfächer <span class="code-word">E-2</span>, <span class="code-word">E-5</span> und <span class="code-word">BO-1</span>. Ich koordiniere Laufgruppen Essen-Nord persönlich. Keine Handys während <span class="code-word">NACHTNEBEL</span> – kein Ausnahme.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 9 (NEU) ═══════════════════════════════════════════════════ -->
+            <div id="thread-9" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Neue Mitglieder: Überprüfungsprotokoll (Stufe 2)</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="5" data-time="11:00">Vor 5 Tagen, 11:00 Uhr</span></div>
+                            <div class="post-body"><p>Wegen der verstärkten <span class="code-word">ZP</span>-Aktivitäten verschärfen wir das Aufnahmeverfahren. Ab sofort gilt für alle Neumitglieder: Stufe-2-Überprüfung. Das bedeutet persönliche Bürgschaft durch ein Bestandsmitglied mit min. 12 Monaten Zugehörigkeit, Hintergrundcheck durch Schatten (Sozialen Fußabdruck prüfen) und dreimonatige Probezeit ohne Zugang zu operativen Threads. Nutzer_04 und Nutzer_09 – ihr seid aktuell in der Probezeit. Keinen Mist bauen.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">KR</div>
+                            <div class="user-info-block">
+                                <span class="username">Kommando_Rheinland</span>
+                                <span class="user-rank">Kommandeur</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 312</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="5" data-time="13:30">Vor 5 Tagen, 13:30 Uhr</span></div>
+                            <div class="post-body"><p>Unterstütze das vollständig. Ich werde für zwei Kandidaten aus dem Raum Neuss bürgen – kenne beide seit Jahren. Schatten hat bereits Kontakt aufgenommen. Wir bekommen saubere Leute rein.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post new-post">
+                        <div class="post-user-col">
+                            <div class="avatar">SC</div>
+                            <div class="user-info-block">
+                                <span class="username">Schatten</span>
+                                <span class="user-rank">Sicherheit</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 112</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="4" data-time="22:15">Vor 4 Tagen, 22:15 Uhr</span></div>
+                            <div class="post-body"><p>Checks für die Neuss-Kandidaten abgeschlossen. Beide sauber – kein Social-Media-Fußabdruck, keine öffentlichen Verbindungen zu uns, keine Einträge. Empfehle grünes Licht für Stufe 1. Probezeit-Zugang empfohlen. Ihr könnt mir vertrauen – ich habe gründlich gearbeitet.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 10 (NEU) ═════════════════════════════════════════════ -->
+            <div id="thread-10" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Tails OS v6 – Update-Pflicht &amp; Checkliste für saubere Sessions</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post new-post">
+                        <div class="post-user-col">
+                            <div class="avatar">SC</div>
+                            <div class="user-info-block">
+                                <span class="username">Schatten</span>
+                                <span class="user-rank">Sicherheit</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 112</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="4" data-time="19:00">Vor 4 Tagen, 19:00 Uhr</span></div>
+                            <div class="post-body">
+                                <p>Tails OS v6.x ist draußen. Update-Pflicht ab sofort für alle, die mit operativen Dokumenten arbeiten. Hier die Checkliste für saubere Sessions:</p>
+                                <p style="margin-top:0.8rem; color:#888;">
+                                    <span class="code-word">1.</span> Immer frischer Tails-Boot vom USB – nie von Festplatte.<br>
+                                    <span class="code-word">2.</span> Tor-Browser nur über <span class="code-word">SECURE NET</span> – kein anderes Netz.<br>
+                                    <span class="code-word">3.</span> .xpi-Plugin installieren VOR dem Login (siehe Thread 5).<br>
+                                    <span class="code-word">4.</span> Session nach Abschluss vollständig beenden – kein Standby.<br>
+                                    <span class="code-word">5.</span> Keine Screenshots, kein Copy-Paste in andere Anwendungen.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">DD</div>
+                            <div class="user-info-block">
+                                <span class="username">Division_DUS</span>
+                                <span class="user-rank">Gruppenleiter</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 234</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="4" data-time="21:00">Vor 4 Tagen, 21:00 Uhr</span></div>
+                            <div class="post-body"><p>Checkliste ist klar, danke Schatten. Mein Trupp ist auf v6 umgestellt – drei Mann hatten noch v5.x drauf. Erledigt.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="3" data-time="07:30">Vor 3 Tagen, 07:30 Uhr</span></div>
+                            <div class="post-body"><p>Schatten – gute Arbeit. An alle: Wer bis Ende der Woche nicht auf v6 ist und das nicht gemeldet hat, bekommt den Zugang entzogen. Das ist kein Witz. OPSEC ist die einzige Waffe, die uns schützt.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post new-post">
+                        <div class="post-user-col">
+                            <div class="avatar">SC</div>
+                            <div class="user-info-block">
+                                <span class="username">Schatten</span>
+                                <span class="user-rank">Sicherheit</span>
+                                <div class="user-stats">Dabei seit: 2022<br>Beiträge: 112</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="3" data-time="10:00">Vor 3 Tagen, 10:00 Uhr</span></div>
+                            <div class="post-body"><p>Ich habe die Installationsdatei für das .xpi-Plugin auf dem internen Server aktualisiert. Sha256-Hash der sauberen Version: <span class="code-word">a3f7d2c1...</span> – bitte vor Installation prüfen. Wer eine abweichende Version hat, sofort melden. Könnte auf Kompromittierung hindeuten.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <!-- ══ THREAD 11 (NEU) ═════════════════════════════════════════════ -->
+            <div id="thread-11" class="panel thread-view">
+                <div class="thread-view-header">
+                    <button class="back-btn" onclick="backToList()">← Zurück</button>
+                    <h2>Kontakt "Nordsturm83" – Weitergabe Materialien NRW-Nord</h2>
+                </div>
+                <div class="post-container">
+
+                    <div class="post">
+                        <div class="post-user-col">
+                            <div class="avatar">KR</div>
+                            <div class="user-info-block">
+                                <span class="username">Kommando_Rheinland</span>
+                                <span class="user-rank">Kommandeur</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 312</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="6" data-time="12:10">Vor 6 Tagen</span></div>
+                            <div class="post-body"><p>Habe Kontakt zu <span class="code-word">Nordsturm83</span> aus dem Netzwerk NRW-Nord aufgebaut. Er kann uns Drucksachen und Logistikmaterial für die nächste Quartalsaktion liefern. Übergabe soll in Münster stattfinden – brauche grünes Licht von WF und zwei Mann als Begleitung. Der Kontakt ist vertrauenswürdig, kommt über Kassenwart empfohlen.</p></div>
+                        </div>
+                    </div>
+
+                    <div class="post admin-post">
+                        <div class="post-user-col">
+                            <div class="avatar">WF</div>
+                            <div class="user-info-block">
+                                <span class="username">Wildfirexx94</span>
+                                <span class="admin-badge">★ ADMIN</span>
+                                <div class="user-stats">Dabei seit: 2021<br>Beiträge: 847</div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <div class="post-header"><div></div><span class="post-date" data-days="6" data-time="14:45">Vor 6 Tagen</span></div>
+                            <div class="post-body"><p>Grünes Licht – aber: <span class="code-word">Nordsturm83</span> bekommt keinen Zugang zu diesem Forum. Übergabe läuft über neutrale Drop-Stelle, nicht persönlich. Schatten überprüft den Kontakt vorher. Kommando_Rheinland – du koordinierst, aber kein Alleingehen. Sturmfront_West und Kette_77 fahren mit.</p></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- /main-area -->
+
+
+        <!-- ══ SIDEBAR ═══════════════════════════════════════════════════════ -->
+        <div class="sidebar">
+
+            <!-- Netzwerkstatus -->
+            <div class="sidebar-panel">
+                <div class="sidebar-panel-header"><h3>🔒 Netzwerkstatus</h3></div>
+                <div class="sidebar-panel-body">
+                    <div class="stat-row"><span class="stat-label">Protokoll</span><span class="stat-val green">AES-256 / TOR</span></div>
+                    <div class="stat-row"><span class="stat-label">Sicherheitsstufe</span><span class="stat-val orange">ELEVATED</span></div>
+                    <div class="stat-row"><span class="stat-label">Aktive Nodes</span><span class="stat-val">29</span></div>
+                    <div class="stat-row"><span class="stat-label">Ping</span><span class="stat-val" id="ping-time">14ms</span></div>
+                    <div class="stat-row"><span class="stat-label">Letzte Prüfung</span><span class="stat-val green">CLEAN</span></div>
+                    <div class="stat-row"><span class="stat-label">Bedrohungslage</span><span class="stat-val red">ERHÖHT</span></div>
+                </div>
+            </div>
+
+            <!-- Mitglieder online -->
+            <div class="sidebar-panel">
+                <div class="sidebar-panel-header"><h3>👥 Mitglieder</h3></div>
+                <div class="sidebar-panel-body">
+                    <div class="member-row">
+                        <span class="member-name admin">Wildfirexx94</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;"><span class="member-role">Admin</span><div class="online-dot"></div></div>
+                    </div>
+                    <div class="member-row">
+                        <span class="member-name online">Kommando_Rheinland</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;"><span class="member-role">Kommandeur</span><div class="online-dot"></div></div>
+                    </div>
+                    <div class="member-row">
+                        <span class="member-name online">Schatten</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;"><span class="member-role">Sicherheit</span><div class="online-dot"></div></div>
+                    </div>
+                    <div class="member-row">
+                        <span class="member-name">Division_DUS</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;"><span class="member-role">Gruppenleiter</span><div class="offline-dot"></div></div>
+                    </div>
+                    <div class="member-row">
+                        <span class="member-name">Kassenwart</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;"><span class="member-role">Kassenwart</span><div class="offline-dot"></div></div>
+                    </div>
+                    <div class="member-row">
+                        <span class="member-name">Späher_W</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;"><span class="member-role">Aufklärer</span><div class="offline-dot"></div></div>
+                    </div>
+                    <div class="member-row">
+                        <span class="member-name">Revier_Stimme</span>
+                        <div style="display:flex;align-items:center;gap:0.4rem;"><span class="member-role">Mitglied</span><div class="offline-dot"></div></div>
+                    </div>
+                    <div style="font-size:0.72rem; color:#333; margin-top:0.5rem; text-align:center;">+22 weitere Mitglieder offline</div>
+                </div>
+            </div>
+
+            <!-- Top Posters -->
+            <div class="sidebar-panel">
+                <div class="sidebar-panel-header"><h3>📊 Aktivste Nutzer</h3></div>
+                <div class="sidebar-panel-body">
+                    <div class="member-row"><span class="member-name admin">Wildfirexx94</span><span class="member-role">847 Posts</span></div>
+                    <div class="member-row"><span class="member-name">Kommando_Rheinland</span><span class="member-role">312 Posts</span></div>
+                    <div class="member-row"><span class="member-name">Division_DUS</span><span class="member-role">234 Posts</span></div>
+                    <div class="member-row"><span class="member-name">Kassenwart</span><span class="member-role">178 Posts</span></div>
+                    <div class="member-row"><span class="member-name">Schatten</span><span class="member-role">112 Posts</span></div>
+                </div>
+            </div>
+
+        </div><!-- /sidebar -->
+
+    </div><!-- /container -->
+
+
+    <!-- ERMITTLER-TOOL (Vierte Wand) -->
+    <div class="trainer-tool">
+        <h3>🔍 Ermittler-Tool (Übung)</h3>
+        <p>Glückwunsch – Forum infiltriert. Für Forensik-Übung Teil 2 benötigen Sie das vorbereitete Browser-Plugin zur weiteren Aufklärung.</p>
+        <a href="assets/facebook@dailysecurity.fr.xpi" download="facebook@dailysecurity.fr.xpi" class="btn-download">⬇ Plugin herunterladen (.xpi)</a>
+    </div>
+
+
+    <script>
+        // ── Logout ──────────────────────────────────────────────────────────────
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            sessionStorage.removeItem('auth_token');
+            window.location.href = 'index.html';
+        });
+
+        // ── Dynamic dates (relative to today, so the exercise never goes stale) ─
+        // data-ago="MIN"                    → posted MIN minutes ago
+        // data-days="N" data-time="HH:MM"   → posted N days ago at HH:MM
+        const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+        const pad = n => String(n).padStart(2, '0');
+
+        function resolveDate(el, now) {
+            if (el.dataset.ago) return new Date(now.getTime() - Number(el.dataset.ago) * 60000);
+            const [h, m] = (el.dataset.time || '12:00').split(':').map(Number);
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate() - Number(el.dataset.days || 0), h, m);
+        }
+
+        function formatDate(d, now) {
+            const startOfDay = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+            const diffDays = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+            const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            if (diffDays === 0) return `Heute, ${time}`;
+            if (diffDays === 1) return `Gestern, ${time}`;
+            return `${WEEKDAYS[d.getDay()]}, ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${time}`;
+        }
+
+        (function renderDates() {
+            const now = new Date();
+            document.querySelectorAll('.post-date[data-ago], .post-date[data-days]').forEach(el => {
+                el.textContent = formatDate(resolveDate(el, now), now) + ' Uhr';
+            });
+            document.querySelectorAll('.list-date').forEach(el => {
+                el.textContent = formatDate(resolveDate(el, now), now);
+            });
+            document.querySelectorAll('.dyn-quarter').forEach(el => {
+                el.textContent = 'Q' + (Math.floor(resolveDate(el, now).getMonth() / 3) + 1);
+            });
+        })();
+
+        // ── Ping simulation ─────────────────────────────────────────────────────
+        setInterval(() => {
+            document.getElementById('ping-time').innerText = Math.floor(Math.random() * 20 + 8) + 'ms';
+        }, 2000);
+
+        // ── Thread navigation ───────────────────────────────────────────────────
+        let typingTimeout, postTimeout;
+
+        function openThread(threadId) {
+            document.getElementById('thread-list').style.display = 'none';
+            document.querySelectorAll('.thread-view').forEach(el => el.style.display = 'none');
+            document.getElementById(threadId).style.display = 'block';
+
+            // Mark as read (remove unread dot)
+            const item = document.querySelector(`[onclick="openThread('${threadId}')"]`);
+            if (item) {
+                item.classList.remove('unread');
+                const dot = item.querySelector('.unread-dot');
+                if (dot) dot.classList.replace('unread-dot', 'read-dot');
+            }
+
+            // Animated live post for Thread 1 only
+            if (threadId === 'thread-1') {
+                const indicator = document.getElementById('typing-indicator');
+                indicator.style.display = 'flex';
+                indicator.style.opacity = '0';
+                clearTimeout(typingTimeout);
+                clearTimeout(postTimeout);
+
+                typingTimeout = setTimeout(() => {
+                    indicator.style.opacity = '1';
+                    postTimeout = setTimeout(() => {
+                        indicator.style.opacity = '0';
+                        if (!document.getElementById('new-post-schatten')) {
+                            const newPost = `
+                            <div class="post new-post" id="new-post-schatten" style="animation-delay:0s;">
+                                <div class="post-user-col">
+                                    <div class="avatar" style="background:rgba(34,197,94,0.2);color:#4ade80;border-color:#2d6b2d;">SC</div>
+                                    <div class="user-info-block">
+                                        <span class="username" style="color:#4ade80;">Schatten</span>
+                                        <span class="user-rank">Sicherheit</span>
+                                        <div class="user-stats">Dabei seit: 2022<br>Beiträge: 113</div>
+                                    </div>
+                                </div>
+                                <div class="post-content">
+                                    <div class="post-header"><div></div><span class="post-date">Gerade eben</span></div>
+                                    <div class="post-body"><p>Bestätigt. Anlage gesichert. Kameras laufen ab 22:00 auf Loop – <span class="code-word">Sektor West</span> blind für 4 Stunden. Cops sehen nur Aufnahmen von gestern Nacht. Ich bin vor Ort bis 23:30, danach eigenständig.</p></div>
+                                </div>
+                            </div>`;
+                            document.getElementById('chat-box-1').insertAdjacentHTML('beforeend', newPost);
+                            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                        }
+                        setTimeout(() => { indicator.style.display = 'none'; }, 600);
+                    }, 5000);
+                }, 2000);
+            }
+        }
+
+        function backToList() {
+            clearTimeout(typingTimeout);
+            clearTimeout(postTimeout);
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) { indicator.style.opacity = '0'; indicator.style.display = 'none'; }
+            document.querySelectorAll('.thread-view').forEach(el => el.style.display = 'none');
+            document.getElementById('thread-list').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
